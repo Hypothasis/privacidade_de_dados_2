@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  epsilon: 1.5
+  animal: MyString
+  count: 1.5
+  porcent: 1.5
+
+two:
+  epsilon: 1.5
+  animal: MyString
+  count: 1.5
+  porcent: 1.5

@@ -1,0 +1,27 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  epsilon: 1.5
+  parda: 1.5
+  amarela: 1.5
+  branca: 1.5
+  preta: 1.5
+  indigena: 1.5
+  sim_parda: 1.5
+  sim_branca: 1.5
+  sim_amarela: 1.5
+  sim_preta: 1.5
+  sim_indigena: 1.5
+
+two:
+  epsilon: 1.5
+  parda: 1.5
+  amarela: 1.5
+  branca: 1.5
+  preta: 1.5
+  indigena: 1.5
+  sim_parda: 1.5
+  sim_branca: 1.5
+  sim_amarela: 1.5
+  sim_preta: 1.5
+  sim_indigena: 1.5

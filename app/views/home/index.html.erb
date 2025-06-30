@@ -1,0 +1,246 @@
+<div class="conteiner">
+  <div class="title">
+    <h1>Painel de Privacidade Diferencial</h1>
+  </div>
+
+  <!-- Histograma de Animais (Mecanismo de Laplace) -->
+  <div class="chart-section">
+    <h2>Mecanismo de Laplace: Frequência de Animais</h2>
+    <div id="animals-charts-container" class="chart-grid">
+    </div>
+  </div>
+
+  <!-- Histograma de Décadas (Mecanismo de Laplace) -->
+  <div class="chart-section">
+    <h2>Mecanismo de Laplace: Pessoas por Década</h2>
+    <div id="decades-charts-container" class="chart-grid">
+    </div>
+  </div>
+
+  <!-- Histograma de Raça/Cor (Original) -->
+  <div class="chart-section">
+    <h2>Histograma de Raça/Cor (Original)</h2>
+    <div id="race-histograms-container" class="chart-grid">
+    </div>
+  </div>
+
+  <!-- Mecanismo Exponencial: Probabilidades e Simulações de Raça -->
+  <div class="chart-section">
+    <h2>Mecanismo Exponencial: Raça Predominante em Morrinhos</h2>
+    <div id="exponential-charts-container" class="chart-grid">
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // Funções auxiliares para gerar cores dinâmicas
+    function generateColors(numColors) {
+        const colors = [];
+        for (let i = 0; i < numColors; i++) {
+            const hue = (i * 137.508) % 360; // Golden angle approximation
+            colors.push(`hsl(${hue}, 70%, 60%)`);
+        }
+        return colors;
+    }
+
+    // Função para criar um gráfico de barras genérico
+    function createBarChart(canvasId, title, labels, data, backgroundColor) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: title,
+                    data: data,
+                    backgroundColor: backgroundColor || generateColors(labels.length),
+                    borderColor: 'rgba(0,0,0,0.75)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: title,
+                        color: 'white'
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255,255,255,0.2)' }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255,255,255,0.2)' }
+                    }
+                }
+            }
+        });
+    }
+
+    // Função para criar um gráfico de Doughnut genérico
+    function createDoughnutChart(canvasId, title, labels, data, backgroundColor) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: title,
+                    data: data,
+                    backgroundColor: backgroundColor || generateColors(labels.length),
+                    borderColor: 'rgba(0,0,0,0.75)'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: 'white'
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: title,
+                        color: 'white'
+                    }
+                }
+            }
+        });
+    }
+
+    // Função principal para buscar e renderizar todos os gráficos
+    async function fetchAndRenderCharts() {
+        try {
+            const response = await fetch("/get", {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const responseData = await response.json();
+            const data = responseData.data;
+
+            // Mecanismo de Laplace: Frequência de Animais
+            if (data.animals_data) {
+                const container = document.getElementById('animals-charts-container');
+                Object.entries(data.animals_data).forEach(([epsilon, animalList]) => {
+                    const canvasId = `animals-laplace-${epsilon.replace('.', '_')}`;
+                    const chartDiv = document.createElement('div');
+                    chartDiv.className = 'chart';
+                    chartDiv.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+                    container.appendChild(chartDiv);
+
+                    const labels = animalList.map(a => a.animal);
+                    const counts = animalList.map(a => a.count); // Ou a.porcent para porcentagens
+                    let title; // Declare 'title' fora do if/else
+                    const epsilonNum = parseFloat(epsilon); // Converte para número para comparação precisa
+
+                    if (epsilonNum === 0) { // Use === para comparação de valor e tipo
+                        title = `Frequência de Animais (Original - Contagem)`;
+                    } else {
+                        title = `Frequência de Animais (ε=${epsilon} - Contagem)`;
+                    }
+
+                    createBarChart(canvasId, title, labels, counts);
+                });
+            }
+
+            // Mecanismo de Laplace: Pessoas por Década
+            if (data.decades_data) {
+                const container = document.getElementById('decades-charts-container');
+                Object.entries(data.decades_data).sort(([e1], [e2]) => parseFloat(e1) - parseFloat(e2)).forEach(([epsilon, decadeCounts]) => {
+                    const canvasId = `decades-laplace-${epsilon.replace('.', '_')}`;
+                    const chartDiv = document.createElement('div');
+                    chartDiv.className = 'chart wide-chart'; // Pode ser wide-chart
+                    chartDiv.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+                    container.appendChild(chartDiv);
+
+                    // Remove 'soma_total' para o gráfico de barras das décadas
+                    const filteredCounts = Object.fromEntries(
+                        Object.entries(decadeCounts).filter(([key]) => key !== 'soma_total')
+                    );
+
+                    const labels = Object.keys(filteredCounts).map(key => key.replace('decada_', '') + 's');
+                    const counts = Object.values(filteredCounts);
+                    let title; // Declare 'title' fora do if/else
+                    const epsilonNum = parseFloat(epsilon); // Converte para número para comparação precisa
+
+                    if (epsilonNum === 0) { // Use === para comparação de valor e tipo
+                        title = `Pessoas por decada (Original - Contagem)`;
+                    } else {
+                        title = `Pessoas por decada (ε=${epsilon} - Contagem)`;
+                    }
+                    createBarChart(canvasId, title, labels, counts);
+                });
+            }
+
+            // Histograma de Raça/Cor (Original)
+            if (data.race_histograms) {
+                const container = document.getElementById('race-histograms-container');
+                Object.entries(data.race_histograms).forEach(([key, raceCounts]) => {
+                    const canvasId = `race-histogram-${key.replace('.', '_')}`;
+                    const chartDiv = document.createElement('div');
+                    chartDiv.className = 'chart wide-chart';
+                    chartDiv.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+                    container.appendChild(chartDiv);
+
+                    const labels = Object.keys(raceCounts);
+                    const counts = Object.values(raceCounts);
+                    const title = `Frequência de Raça/Cor (${key.split('_')[0].toUpperCase()})`;
+                    createBarChart(canvasId, title, labels, counts);
+                });
+            }
+
+            // Mecanismo Exponencial: Probabilidades e Simulações de Raça
+            if (data.race_probs_sims) {
+                const container = document.getElementById('exponential-charts-container');
+                Object.entries(data.race_probs_sims).sort(([e1], [e2]) => parseFloat(e1) - parseFloat(e2)).forEach(([epsilon, dataPair]) => {
+                    const probs = dataPair.probabilities;
+                    const sims = dataPair.simulations;
+
+                    // Gráfico de Probabilidades
+                    const probCanvasId = `exp-probs-${epsilon.replace('.', '_')}`;
+                    const probChartDiv = document.createElement('div');
+                    probChartDiv.className = 'chart';
+                    probChartDiv.innerHTML = `<canvas id="${probCanvasId}"></canvas>`;
+                    container.appendChild(probChartDiv);
+
+                    const probLabels = Object.keys(probs);
+                    const probValues = Object.values(probs);
+                    const probTitle = `Probabilidades de Seleção (ε=${epsilon})`;
+                    createBarChart(probCanvasId, probTitle, probLabels, probValues);
+
+                    // Gráfico de Simulações
+                    const simCanvasId = `exp-sims-${epsilon.replace('.', '_')}`;
+                    const simChartDiv = document.createElement('div');
+                    simChartDiv.className = 'chart';
+                    simChartDiv.innerHTML = `<canvas id="${simCanvasId}"></canvas>`;
+                    container.appendChild(simChartDiv);
+
+                    const simLabels = Object.keys(sims);
+                    const simValues = Object.values(sims);
+                    const simTitle = `Simulações (ε=${epsilon}, 20x)`;
+                    createBarChart(simCanvasId, simTitle, simLabels, simValues);
+                });
+            }
+
+            console.log("Gráficos renderizados com sucesso!");
+
+        } catch (error) {
+            console.error("Erro ao buscar ou renderizar dados:", error);
+        }
+    }
+
+    // Chamar a função para buscar e renderizar os gráficos quando a página carregar
+    document.addEventListener('DOMContentLoaded', fetchAndRenderCharts);
+</script>

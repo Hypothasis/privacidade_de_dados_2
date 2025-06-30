@@ -1,0 +1,33 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  epsilon: 1.5
+  decada_10: 1.5
+  decada_20: 1.5
+  decada_30: 1.5
+  decada_40: 1.5
+  decada_50: 1.5
+  decada_60: 1.5
+  decada_70: 1.5
+  decada_80: 1.5
+  decada_90: 1.5
+  decada_2000: 1.5
+  decada_2010: 1.5
+  decada_2020: 1.5
+  soma_total: 1.5
+
+two:
+  epsilon: 1.5
+  decada_10: 1.5
+  decada_20: 1.5
+  decada_30: 1.5
+  decada_40: 1.5
+  decada_50: 1.5
+  decada_60: 1.5
+  decada_70: 1.5
+  decada_80: 1.5
+  decada_90: 1.5
+  decada_2000: 1.5
+  decada_2010: 1.5
+  decada_2020: 1.5
+  soma_total: 1.5

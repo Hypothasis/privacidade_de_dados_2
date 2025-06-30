@@ -1,0 +1,2 @@
+class HistogramaRaca < ApplicationRecord
+end
