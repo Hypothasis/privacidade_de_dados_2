@@ -137,7 +137,7 @@ a:hover {
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.534);
     width: 90%;
     max-width: 400px;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 2 / 1;
 }
 
 .wide-chart {
