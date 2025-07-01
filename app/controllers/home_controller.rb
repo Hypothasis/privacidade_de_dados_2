@@ -83,11 +83,10 @@ class HomeController < ApplicationController
     aplicar_mecanismo_exponencial_raca(contagem_por_raca_morrinhos, epsilons, 1, 20)
 
 
-    render plain: "Método run feito com sucesso!"
+    render plain: "\nMétodo run feito com sucesso!\n"
   end
 
   def get
-
     # Dados do Mecanismo de Laplace (Animais)
     animals_data = {}
     Animal.all.group_by(&:epsilon).each do |epsilon_val, animals|
@@ -181,13 +180,11 @@ class HomeController < ApplicationController
 
     Rails.logger.info "Iniciando Etapa 1: Mecanismo de Laplace para Frequência de Animais"
 
-    # --- Salvar as Frequências Originais (epsilon = 0 para representar 'sem privacidade') ---
+    # --- Salvar as Frequências Originais  ---
     frequencia_animais_original.each do |animal_nome, count_original|
-      animal_db = Animal.find_or_initialize_by(epsilon: 0.0, animal: animal_nome) # Use 0.0 para float
+      animal_db = Animal.find_or_initialize_by(epsilon: 0.0, animal: animal_nome)
       animal_db.count = count_original
-      # Se você tiver uma coluna 'porcent' no modelo Animal, pode deixar nil ou 0.0,
-      # ou ajustar o modelo para não ter essa coluna se ela for específica do Exp. Mecanismo.
-      animal_db.porcent = nil # Ou 0.0, ou remova se a coluna não for aplicável
+      animal_db.porcent = nil
       animal_db.save!
     end
     Rails.logger.info "Frequências Originais de Animais salvas (epsilon = 0.0)."
@@ -203,7 +200,7 @@ class HomeController < ApplicationController
       frequencia_anonimizado = {}
       frequencia_animais_original.each do |animal, count_original|
         noise = generate_laplace_noise(b)
-        noisy_count = (count_original + noise).round # Adiciona o ruído e arredonda
+        noisy_count = (count_original + noise).round # Adiciona o ruído
         frequencia_anonimizado[animal] = [0, noisy_count].max # Garante que a contagem não seja negativa
 
         # Salvando no banco de dados a frequência anonimizada
@@ -215,6 +212,26 @@ class HomeController < ApplicationController
 
       Rails.logger.info "Frequências Anonimizadas de Animais para ε=#{epsilon} salvas no Banco de Dados."
     end
+  end
+
+  # Implementação da função para gerar ruído de Laplace
+  # Utiliza a função inversa da CDF (Função de Distribuição Acumulativa)
+  # Função derivada da FDP (Função Densidade de Probabilidade)
+  # Função inversa combina o FDP e o CDF
+  #  x = −b * ln (2(1−y))
+  def generate_laplace_noise(b, rng = Random.new)
+    u = rng.rand - 0.5 # Gera um número entre -0.5 e 0.5
+
+    # ALTERAÇÃO AQUI: Implementação do 'sinal' para Ruby 3.3.3
+    sinal_u = if u > 0
+                1
+              elsif u < 0
+                -1
+              else
+                0
+              end
+
+    -b * sinal_u * Math.log(1 - 2 * u.abs)
   end
 
   # ----------------------------------------------------------------
@@ -269,24 +286,6 @@ class HomeController < ApplicationController
     pessoas_por_decadas["soma_total"] = csv_data.size
 
     return pessoas_por_decadas
-  end
-
-  # Implementação da função para gerar ruído de Laplace
-  # Parâmetros:
-  #   b (escala) = Delta_f / epsilon
-  def generate_laplace_noise(b, rng = Random.new)
-    u = rng.rand - 0.5 # Gera um número uniformemente aleatório entre -0.5 e 0.5
-
-    # ALTERAÇÃO AQUI: Implementação do 'sinal' para Ruby 3.3.3
-    sinal_u = if u > 0
-                1
-              elsif u < 0
-                -1
-              else
-                0
-              end
-
-    -b * sinal_u * Math.log(1 - 2 * u.abs)
   end
 
   def gerar_ruido_laplace(histograma_original, epsilons, sensibilidade)
@@ -456,7 +455,6 @@ class HomeController < ApplicationController
       selecoes_resultantes.sort_by { |_, count| -count }.each do |raca, count| # Ordena do mais frequente para o menos
         # Atributos para DB
         attributes_to_set["sim_".concat(raca).downcase.to_sym] = count
-
       end
 
       racas_probs.assign_attributes(attributes_to_set)
